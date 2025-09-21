@@ -182,10 +182,6 @@ def predict_delta_lst(sample_dict):
     # get feature importance (gain)
     fmap = model.get_booster().get_score(importance_type="gain")
     
-    # Debug: print what we got from XGBoost
-    print(f"XGBoost feature map: {fmap}")
-    print(f"Feature names: {feature_names}")
-    
     # Use the built-in feature_importances_ if available, otherwise use get_score
     if hasattr(model, 'feature_importances_'):
         importances = {feature_names[idx]: model.feature_importances_[idx] for idx in range(len(feature_names))}
