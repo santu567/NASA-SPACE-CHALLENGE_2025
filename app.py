@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from shapely.geometry import shape, Point, Polygon
+import joblib
 
 st.set_page_config(layout="wide", page_title="City Impact Prototype")
 
@@ -155,3 +156,61 @@ with col2:
 
 st.markdown("---")
 st.caption("Prototype uses simple, transparent rules. Replace rule-based numbers with GEE or NASA data for a production-ready tool.")
+
+
+
+
+
+
+
+# load model once (at top-level so Streamlit caches it)
+@st.cache_resource
+def load_model(path="models/xgb_model.joblib"):
+    data = joblib.load(path)
+    return data["model"], data["features"]
+
+model, feature_names = load_model()
+
+# function to predict
+def predict_delta_lst(sample_dict):
+    """
+    sample_dict keys must match feature_names exactly.
+    Returns predicted delta LST (degC) and feature importances.
+    """
+    X = pd.DataFrame([sample_dict])[feature_names]
+    pred = model.predict(X)[0]
+    # get feature importance (gain)
+    fmap = model.get_booster().get_score(importance_type="gain")
+    
+    # Debug: print what we got from XGBoost
+    print(f"XGBoost feature map: {fmap}")
+    print(f"Feature names: {feature_names}")
+    
+    # Use the built-in feature_importances_ if available, otherwise use get_score
+    if hasattr(model, 'feature_importances_'):
+        importances = {feature_names[idx]: model.feature_importances_[idx] for idx in range(len(feature_names))}
+    else:
+        # create consistent ordering - XGBoost uses f0, f1, f2... format
+        importances = {feature_names[idx]: fmap.get(f"f{idx}", 0.0) for idx in range(len(feature_names))}
+    
+    # normalize for display
+    total = sum(importances.values()) or 1.0
+    for k in importances:
+        importances[k] = importances[k] / total
+    return pred, importances
+
+# Later, after user draws polygon you compute the sample features (or use mocked values)
+# Example usage (replace with your real polygon-extracted values):
+sample = {
+    "current_ndvi": current_ndvi,         # from your polygon average
+    "impervious_frac": 0.45,              # computed or mocked
+    "elevation": 55.0,                    # m
+    "dist_to_water": 0.8,                 # km
+    "current_lst": current_lst,           # degC
+    "proposed_flag": 1                    # 1 for develop, -1 for park
+}
+pred_delta, importances = predict_delta_lst(sample)
+st.write(f"Predicted ΔLST (°C) for scenario: **{pred_delta:.2f} °C**")
+# show importances
+imp_df = pd.DataFrame(list(importances.items()), columns=["feature","importance"]).sort_values("importance", ascending=False)
+st.bar_chart(imp_df.set_index("feature"))
