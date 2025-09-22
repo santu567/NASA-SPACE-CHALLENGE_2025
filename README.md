@@ -58,14 +58,14 @@ See full details in `FEATURES.md` and a condensed overview in `QUICK_FEATURES.md
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                               MACHINE LEARNING                                   │
-│  • XGBoost regression • Feature engineering • Real‑time inference                │
+│                               MACHINE LEARNING                                  │
+│  • XGBoost regression • Feature engineering • Real‑time inference               │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                STORAGE & MODELS                                  │
-│  • models/xgb_model.joblib • requirements/runtime • versioning                   │
+│                                STORAGE & MODELS                                 │
+│  • models/xgb_model.joblib • requirements/runtime • versioning                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
